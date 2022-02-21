@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:todo_app/data/task.dart';
 import 'package:todo_app/widgets/task_card.dart';
@@ -18,12 +19,57 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+
+  TextEditingController _controller = TextEditingController();
+
   List<Task> tasks_data = [
     Task("Create new project", false),
     Task("Working call", false),
     Task("Meet with doctor", false),
     Task("Go to the shop", true),
   ];
+
+  void showAddTaskDialog() {
+    _controller.text = "";
+
+    showDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: Text("Enter Task Name"),
+        content: CupertinoTextField(
+          controller: _controller,
+          autofocus: true,
+        ),
+        actions: [
+          CupertinoButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text(
+              "Cancel",
+              style: TextStyle(
+                color: Colors.red
+              ),
+            ),
+          ),
+          CupertinoButton(
+            onPressed: () {
+              if (_controller.text.isEmpty){
+                return;
+              }
+
+              Navigator.pop(context);
+              Task createdTask = Task(_controller.text, false);
+              setState(() {
+                tasks_data.add(createdTask);
+              });
+            },
+            child: Text("Done"),
+          )
+        ],
+      )
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +99,9 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          showAddTaskDialog();
+        },
         child: Icon(
           Icons.add,
           size: 30,
