@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:todo_app/data/task.dart';
+import 'package:todo_app/widgets/more_options.dart';
 import 'package:todo_app/widgets/task_card.dart';
 
 void main() {
@@ -20,8 +21,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
 
-  TextEditingController _controller = TextEditingController();
-
   List<Task> tasks_data = [
     Task("Create new project", false),
     Task("Working call", false),
@@ -30,29 +29,29 @@ class _HomeScreenState extends State<HomeScreen> {
   ];
 
   void showAddTaskDialog() {
-    _controller.text = "";
+    TextEditingController _controller = TextEditingController();
 
     showDialog(
       context: context,
-      builder: (context) => CupertinoAlertDialog(
+      builder: (context) => AlertDialog(
         title: Text("Enter Task Name"),
-        content: CupertinoTextField(
+        content: TextField(
           controller: _controller,
           autofocus: true,
         ),
         actions: [
-          CupertinoButton(
+          MaterialButton(
             onPressed: () {
               Navigator.pop(context);
             },
             child: Text(
               "Cancel",
               style: TextStyle(
-                color: Colors.red
+                color: Colors.blue
               ),
             ),
           ),
-          CupertinoButton(
+          MaterialButton(
             onPressed: () {
               if (_controller.text.isEmpty){
                 return;
@@ -64,7 +63,77 @@ class _HomeScreenState extends State<HomeScreen> {
                 tasks_data.add(createdTask);
               });
             },
-            child: Text("Done"),
+            color: Colors.blue,
+            child: Text(
+              "Done",
+              style: TextStyle(
+                color: Colors.white
+              ),
+            ),
+          )
+        ],
+      )
+    );
+  }
+
+  void showOptions(Task task) {
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) => MoreOptions(
+        delete: () {
+          setState(() {
+            tasks_data.remove(task);
+          });
+        },
+        edit: () => showEditTaskDialog(task),
+      )
+    );
+  }
+
+  void showEditTaskDialog(Task task) {
+    TextEditingController _controller = TextEditingController();
+    _controller.text = task.title;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Edit Task ${task.title}"),
+        content: TextField(
+          controller: _controller,
+          autofocus: true,
+        ),
+        actions: [
+          MaterialButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text(
+              "Cancel",
+              style: TextStyle(
+                color: Colors.blue
+              ),
+            ),
+          ),
+          MaterialButton(
+            onPressed: () {
+              if (_controller.text.isEmpty){
+                return;
+              }
+
+              Navigator.pop(context);
+              Task createdTask = Task(_controller.text, false);
+              setState(() {
+                int index = tasks_data.indexOf(task);
+                tasks_data[index].title = _controller.text;
+              });
+            },
+            color: Colors.blue,
+            child: Text(
+              "Done",
+              style: TextStyle(
+                color: Colors.white
+              ),
+            ),
           )
         ],
       )
@@ -120,6 +189,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 tasks_data[index].isCompleted = !tasks_data[index].isCompleted;
               });
             },
+            onLongPress: () => showOptions(tasks_data[index]),
           );
         }),
       ),
