@@ -146,13 +146,34 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (context) => MoreOptions(
         delete: () {
-          setState(() {
-            tasks_data.remove(task);
-          });
+          deleteTask(task);
         },
         edit: () => showEditTaskDialog(task),
       )
     );
+  }
+
+  void deleteTask(Task task) {
+    setState(() {
+      tasks_data.remove(task);
+    });
+    dumpJsonData();
+  }
+
+  void dumpJsonData() async {
+    List<Map<String, dynamic>> finalData = [];
+
+    for (Task task in tasks_data){
+      finalData.add(
+        {
+          "title": task.title,
+          "isCompleted": task.isCompleted
+        }
+      );
+    }
+
+    String json = jsonEncode(finalData);
+    tasksFile.writeAsString(json);
   }
 
   void showEditTaskDialog(Task task) {
