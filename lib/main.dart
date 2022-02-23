@@ -1,5 +1,9 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:todo_app/data/task.dart';
 import 'package:todo_app/widgets/more_options.dart';
 import 'package:todo_app/widgets/task_card.dart';
@@ -20,13 +24,58 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  late File tasksFile;
 
-  List<Task> tasks_data = [
-    Task("Create new project", false),
-    Task("Working call", false),
-    Task("Meet with doctor", false),
-    Task("Go to the shop", true),
-  ];
+  List<Task> tasks_data = [];
+
+  @override
+  void initState() {
+    super.initState();
+    getTasks();
+  }
+
+  void getTasks() async {
+    // Get the documents directory
+    Directory documentsDirectory = await getApplicationDocumentsDirectory();
+
+    // Make the file path from documents path
+    String filePath = documentsDirectory.path + "/tasks.json";
+
+    // Get the file from path and create if it doesn't exist
+    tasksFile = await File(filePath).create(recursive: true);
+
+    // Read the file data as string
+    String fileData = await tasksFile.readAsString();
+
+    // If the data is empty
+    if (fileData == ""){
+
+      // Make it "[]" (Array)
+      fileData = "[]";
+
+      // Write the edited data to file
+      await tasksFile.writeAsString(fileData);
+    }
+
+    // Decode the json from file data
+    List<dynamic> json = jsonDecode(fileData);
+
+    // Iterate through every item in json (A Map<String, dynamic> object)
+    for (dynamic item in json) {
+
+      // Make a task object from this map item
+      Task task = Task(
+        item["title"],
+        item["isCompleted"]
+      );
+
+      // Add this task to tasks_data list
+      tasks_data.add(task);
+    }
+
+    // Refresh the screen
+    setState(() {});
+  }
 
   void showAddTaskDialog() {
     TextEditingController _controller = TextEditingController();
@@ -62,6 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
               setState(() {
                 tasks_data.add(createdTask);
               });
+              addTaskToFile(createdTask);
             },
             color: Colors.blue,
             child: Text(
@@ -74,6 +124,21 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       )
     );
+  }
+
+  void addTaskToFile(Task task) async {
+    Map<String, dynamic> taskMap = {
+      "title": task.title,
+      "isCompleted": task.isCompleted
+    };
+
+    String fileData = await tasksFile.readAsString();
+
+    List<dynamic> json = jsonDecode(fileData);
+    json.add(taskMap);
+
+    String finalData = jsonEncode(json);
+    tasksFile.writeAsString(finalData);
   }
 
   void showOptions(Task task) {
